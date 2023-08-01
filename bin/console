@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << File.expand_path("../app", __dir__)
+
+require 'bundler/setup'
+require 'irb'
+require 'gpx_directions'
+
+IRB.start
