@@ -5,7 +5,7 @@ module GpxDirections
       children: [:osm]
     },
     osm: {
-      children: [:bounds, :node, :way, :relation]
+      children: [:bounds, :node, :way]
     },
     bounds: {
       attrs: [:minlat, :minlon, :maxlat, :maxlon]
@@ -17,15 +17,8 @@ module GpxDirections
       attrs: [:id],
       children: [:nd, :tag]
     },
-    relation: {
-      attrs: [:id],
-      children: [:member, :tag]
-    },
     nd: {
       attrs: [:ref]
-    },
-    member: {
-      attrs: [:type, :ref, :role]
     },
     tag: {
       attrs: [:k, :v]
