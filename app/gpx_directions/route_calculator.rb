@@ -59,7 +59,6 @@ module GpxDirections
     def calculate_route(gpx_hierarchy)
       nodes = gpx_hierarchy.points.map(&method(:find_closest_node))
       node_ways = build_node_ways(nodes)
-
       route_parts = build_route(node_ways)
 
       reduce_redundant_parts(route_parts)
@@ -202,10 +201,6 @@ module GpxDirections
 
     def nodes_by_id
       @nodes_by_id ||= @osm_hierarchy.nodes.to_h { |node| [node.id, node] }
-    end
-
-    def ways_by_id
-      @ways_by_id ||= @osm_hierarchy.ways.to_h { |way| [way.id, way] }
     end
 
     def ways_by_node_id

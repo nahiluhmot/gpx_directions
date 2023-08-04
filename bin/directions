@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << File.expand_path("../app", __dir__)
+
+require 'bundler/setup'
+require 'gpx_directions'
+
+if ARGV.length != 2
+  puts "USAGE: #{$PROGRAM_NAME} OSM_PATH GPX_PATH"
+
+  exit 1
+end
+
+ARGV.each do |path|
+  unless File.file?(path)
+    puts "No such file: #{path}"
+
+    exit 2
+  end
+end
+
+directions = GpxDirections.calculate_route(
+  osm_file: ARGV[0],
+  gpx_file: ARGV[1]
+)
+
+puts directions.map(&:show)
