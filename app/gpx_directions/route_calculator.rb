@@ -50,8 +50,6 @@ module GpxDirections
       end
     end
 
-    Route = Struct.new(:total_distance_meters, :route_parts, keyword_init: true)
-
     def initialize(osm_hierarchy)
       @osm_hierarchy = osm_hierarchy
     end
