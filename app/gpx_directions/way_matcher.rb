@@ -24,16 +24,8 @@ module GpxDirections
         ways = @ways_by_node_id[node.id]
         last_node_id = node_ways.last&.way&.id
 
-        way =
-          if ways.empty?
-            nil
-          elsif ways.length == 1
-            ways.first
-          elsif (matching = ways.find { |way| way.id == last_node_id })
-            matching
-          else
-            ways.first
-          end
+        way = ways.find { |way| way.id == last_node_id } if last_node_id
+        way ||= ways.first
 
         node_ways << NodeWay.new(node:, way:)
       end

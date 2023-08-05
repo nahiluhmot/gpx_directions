@@ -35,10 +35,10 @@ module GpxDirections
                 "#{meters.round}m"
               end
 
-            "Continue on #{way&.name || "?"} for #{distance}"
+            "Continue on #{way.name || "?"} for #{distance}"
           end
           m.turn do |way|
-            "#{turn_description.show} onto #{way&.name || "?"}"
+            "#{turn_description.show} onto #{way.name || "?"}"
           end
           m.finish_on "Finish"
         end

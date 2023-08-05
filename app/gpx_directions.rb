@@ -25,7 +25,7 @@ module GpxDirections
     gpx_hierarchy = build_hierarchy_from_file(gpx_file, GpxParser, GpxHierarchy)
 
     nodes = NodeMatcher
-      .build(osm_hierarchy.nodes, osm_hierarchy.ways)
+      .new(osm_hierarchy.nodes)
       .then { |matcher| gpx_hierarchy.points.map(&matcher.method(:find_matching_node)) }
 
     node_ways = WayMatcher
