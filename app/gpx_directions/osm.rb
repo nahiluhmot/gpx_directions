@@ -3,7 +3,7 @@ module GpxDirections
   # OpenStreetMap.
   module Osm
     # Parses .osm files downloaded from OpenStreetMap.
-    Parser = SaxDSL.define(
+    Parser = Sax.define_parser(
       root: {
         children: [:osm]
       },
@@ -44,7 +44,7 @@ module GpxDirections
 
     # Parsers
 
-    def parse(io)
+    def parse_xml(io)
       Parser.parse(io)
     end
 

@@ -3,8 +3,7 @@ require "bigdecimal"
 require "ox"
 require "sums_up"
 
-require "gpx_directions/sax_dsl"
-require "gpx_directions/sax_parser"
+require "gpx_directions/sax"
 
 require "gpx_directions/gpx"
 require "gpx_directions/osm"
@@ -20,10 +19,11 @@ module GpxDirections
 
   def calculate_route(osm_filepath:, gpx_filepath:)
     osm_map = File
-      .open(osm_filepath, &Osm.method(:parse))
+      .open(osm_filepath, &Osm.method(:parse_xml))
       .then(&Osm.method(:build_map))
+
     gpx_route = File
-      .open(gpx_filepath, &Gpx.method(:parse))
+      .open(gpx_filepath, &Gpx.method(:parse_xml))
       .then(&Gpx.method(:build_route))
 
     matching_nodes = NodeMatcher
