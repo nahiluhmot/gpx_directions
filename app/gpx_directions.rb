@@ -17,7 +17,7 @@ require "gpx_directions/way_matcher"
 module GpxDirections
   module_function
 
-  def calculate_route(osm_filepath:, gpx_filepath:)
+  def generate_directions(osm_filepath:, gpx_filepath:)
     osm_map = File
       .open(osm_filepath, &Osm.method(:parse_xml))
       .then(&Osm.method(:build_map))
