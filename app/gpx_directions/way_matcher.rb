@@ -1,5 +1,8 @@
 module GpxDirections
+  # Associate Osm::Nodes with Osm::Ways assuming the nodes are on a continuous
+  # path.
   class WayMatcher
+    # A Node on a particular Way.
     NodeWay = Struct.new(:node, :way, keyword_init: true)
 
     def self.build(ways)

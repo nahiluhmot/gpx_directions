@@ -1,6 +1,8 @@
 module GpxDirections
   # Define classes and hierarchy for a SAX parser using a Hash.
   class SaxDSL < Module
+    private_class_method :new
+
     def self.define(config_by_element_type)
       classes_by_type = {}
 

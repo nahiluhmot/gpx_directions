@@ -1,4 +1,5 @@
 module GpxDirections
+  # Math functions for a GPS.
   module GpsCalculator
     EARTH_RADIUS_METERS = 6_378_000
     ONE_DEGREE_RADIANS = Math::PI / 180
@@ -32,7 +33,7 @@ module GpxDirections
       radians = Math.acos(acos_arg)
       degrees = radians * 180 / Math::PI
 
-      cross_product = cross_product(
+      cross_product = calculate_cross_product(
         node2.lat - node1.lat,
         node2.lon - node1.lon,
         node3.lat - node1.lat,
@@ -44,7 +45,7 @@ module GpxDirections
       degrees
     end
 
-    def cross_product(lat1, lat2, lon1, lon2)
+    def calculate_cross_product(lat1, lat2, lon1, lon2)
       (lat1 * lon2) - (lat2 * lon1)
     end
   end

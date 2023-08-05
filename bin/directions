@@ -20,8 +20,8 @@ ARGV.each do |path|
 end
 
 directions = GpxDirections.calculate_route(
-  osm_file: ARGV[0],
-  gpx_file: ARGV[1]
+  osm_filepath: ARGV[0],
+  gpx_filepath: ARGV[1]
 )
 
-puts directions.map(&:show)
+puts directions

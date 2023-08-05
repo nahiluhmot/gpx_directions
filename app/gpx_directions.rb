@@ -6,38 +6,36 @@ require "sums_up"
 require "gpx_directions/sax_dsl"
 require "gpx_directions/sax_parser"
 
-require "gpx_directions/gpx_parser"
-require "gpx_directions/osm_parser"
-
-require "gpx_directions/gpx_hierarchy"
-require "gpx_directions/osm_hierarchy"
+require "gpx_directions/gpx"
+require "gpx_directions/osm"
 
 require "gpx_directions/gps_calculator"
 require "gpx_directions/node_matcher"
 require "gpx_directions/route_builder"
 require "gpx_directions/way_matcher"
 
+# Top-level functions.
 module GpxDirections
   module_function
 
-  def calculate_route(osm_file:, gpx_file:)
-    osm_hierarchy = build_hierarchy_from_file(osm_file, OsmParser, OsmHierarchy)
-    gpx_hierarchy = build_hierarchy_from_file(gpx_file, GpxParser, GpxHierarchy)
+  def calculate_route(osm_filepath:, gpx_filepath:)
+    osm_map = File
+      .open(osm_filepath, &Osm.method(:parse))
+      .then(&Osm.method(:build_map))
+    gpx_route = File
+      .open(gpx_filepath, &Gpx.method(:parse))
+      .then(&Gpx.method(:build_route))
 
-    nodes = NodeMatcher
-      .new(osm_hierarchy.nodes)
-      .then { |matcher| gpx_hierarchy.points.map(&matcher.method(:find_matching_node)) }
+    matching_nodes = NodeMatcher
+      .new(osm_map.nodes)
+      .then { |matcher| gpx_route.points.map(&matcher.method(:find_matching_node)) }
 
     node_ways = WayMatcher
-      .build(osm_hierarchy.ways)
-      .build_node_ways(nodes)
+      .build(osm_map.ways)
+      .build_node_ways(matching_nodes)
 
-    RouteBuilder.build_route(node_ways)
-  end
-
-  def build_hierarchy_from_file(file, parser, builder)
-    File
-      .open(file, &parser.method(:parse))
-      .then(&builder.method(:build))
+    RouteBuilder
+      .build_directions(node_ways)
+      .then(&RouteBuilder.method(:show_directions))
   end
 end
