@@ -8,7 +8,7 @@ module GpxDirections
       private_class_method :new
 
       def self.build(nodes)
-        new.insert_nodes(nodes.dup)
+        new.insert_nodes(nodes)
       end
 
       def initialize
@@ -65,27 +65,28 @@ module GpxDirections
         self
       end
 
-      def insert_nodes(nodes, level = 0)
-        if nodes.length < 2
-          nodes.each(&method(:insert))
+      def insert_nodes(nodes)
+        return self if nodes.empty?
 
-          return self
+        nodes = nodes.dup
+        to_insert = [[0, nodes.length - 1, 0]]
+
+        until to_insert.empty?
+          start_idx, end_idx, level = to_insert.shift
+
+          next if start_idx > end_idx
+
+          comparator = level.even? ? :lat : :lon
+          Sorting.in_place_sort_by!(nodes, start_idx, end_idx, &comparator)
+
+          idx = (start_idx + end_idx) / 2
+          median = nodes[idx]
+
+          insert(median)
+
+          to_insert << [start_idx, idx - 1, level + 1]
+          to_insert << [idx + 1, end_idx, level + 1]
         end
-
-        # TODO: use median-of-medians.
-        if level.even?
-          nodes.sort_by!(&:lat)
-        else
-          nodes.sort_by!(&:lon)
-        end
-
-        idx = nodes.length / 2
-        median = nodes[nodes.length / 2]
-
-        insert(median)
-
-        insert_nodes(nodes[..idx.pred], level.succ)
-        insert_nodes(nodes[idx.succ..], level.succ)
 
         self
       end
@@ -122,21 +123,6 @@ module GpxDirections
         end
 
         idx
-      end
-
-      def tree_ancestors(idx)
-        ancestors = []
-        ancestor_idx = idx
-
-        loop do
-          ancestors.push(ancestor_idx)
-
-          break if ancestor_idx.zero?
-
-          ancestor_idx = up(ancestor_idx)
-        end
-
-        ancestors
       end
 
       def calculate_best_possible_distance(idx, lat, lon)
@@ -185,6 +171,21 @@ module GpxDirections
         end
 
         constraints
+      end
+
+      def tree_ancestors(idx)
+        ancestors = []
+        ancestor_idx = idx
+
+        loop do
+          ancestors.push(ancestor_idx)
+
+          break if ancestor_idx.zero?
+
+          ancestor_idx = up(ancestor_idx)
+        end
+
+        ancestors
       end
 
       def consider_lat?(idx)
