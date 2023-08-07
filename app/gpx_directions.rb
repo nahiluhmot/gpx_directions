@@ -23,16 +23,16 @@ module GpxDirections
     end
   end
 
-  def generate_directions(osm_filepath:, gpx_filepath:)
-    Logger.info("parsing osm file at #{osm_filepath}")
-    osm_map = File
-      .open(osm_filepath, &Osm.method(:parse_xml))
-      .then(&Osm.method(:build_map))
-
+  def generate_directions(gpx_filepath:, osm_filepath:)
     Logger.info("parsing gpx file at #{gpx_filepath}")
     gpx_route = File
       .open(gpx_filepath, &Gpx.method(:parse_xml))
       .then(&Gpx.method(:build_route))
+
+    Logger.info("parsing osm file at #{osm_filepath}")
+    osm_map = File
+      .open(osm_filepath, &Osm.method(:parse_xml))
+      .then(&Osm.method(:build_map))
 
     Logger.info("calculating directions")
     directions = Calculators.calculate_directions(osm_map, gpx_route)
