@@ -2,9 +2,6 @@ module GpxDirections
   module Calculators
     # Stores Osm::Nodes in a tree format for fast lookup.
     class TwoDimensionalTree
-      LatLonConstraints = Struct.new(:lat, :lon, keyword_init: true)
-      Constraint = Struct.new(:lower_bound, :upper_bound, keyword_init: true)
-
       private_class_method :new
 
       def self.build(nodes)
@@ -126,14 +123,12 @@ module GpxDirections
       end
 
       def calculate_best_possible_distance(idx, lat, lon)
-        node = @nodes[idx]
-
-        return Float::INFINITY if node.nil?
+        return Float::INFINITY unless @nodes.key?(idx)
 
         constraints = calculate_lat_lon_constraints(idx)
 
-        best_possible_lat = lat.clamp(constraints.lat.lower_bound, constraints.lat.upper_bound)
-        best_possible_lon = lon.clamp(constraints.lon.lower_bound, constraints.lon.upper_bound)
+        best_possible_lat = lat.clamp(*constraints[:lat].values_at(:lower_bound, :upper_bound))
+        best_possible_lon = lon.clamp(*constraints[:lon].values_at(:lower_bound, :upper_bound))
 
         CoordinateMath.calculate_distance_score(
           best_possible_lat,
@@ -144,10 +139,10 @@ module GpxDirections
       end
 
       def calculate_lat_lon_constraints(idx)
-        constraints = LatLonConstraints.new(
-          lat: Constraint.new(lower_bound: -Float::INFINITY, upper_bound: Float::INFINITY),
-          lon: Constraint.new(lower_bound: -Float::INFINITY, upper_bound: Float::INFINITY)
-        )
+        constraints = {
+          lat: {lower_bound: -Float::INFINITY, upper_bound: Float::INFINITY},
+          lon: {lower_bound: -Float::INFINITY, upper_bound: Float::INFINITY}
+        }
 
         tree_ancestors(idx).each do |ancestor_idx|
           next if ancestor_idx.zero?
@@ -156,17 +151,17 @@ module GpxDirections
           parent = @nodes[pidx]
 
           if consider_lat?(pidx)
-            if ancestor_idx.odd? && (constraints.lat.upper_bound > parent.lat)
-              constraints.lat.upper_bound = parent.lat
+            if ancestor_idx.odd? && (constraints[:lat][:upper_bound] > parent.lat)
+              constraints[:lat][:upper_bound] = parent.lat
             end
 
-            if ancestor_idx.even? && (constraints.lat.lower_bound < parent.lat)
-              constraints.lat.lower_bound = parent.lat
+            if ancestor_idx.even? && (constraints[:lat][:lower_bound] < parent.lat)
+              constraints[:lat][:lower_bound] = parent.lat
             end
-          elsif ancestor_idx.odd? && (constraints.lon.upper_bound > parent.lon)
-            constraints.lon.upper_bound = parent.lon
-          elsif ancestor_idx.even? && (constraints.lon.lower_bound < parent.lon)
-            constraints.lon.lower_bound = parent.lon
+          elsif ancestor_idx.odd? && (constraints[:lon][:upper_bound] > parent.lon)
+            constraints[:lon][:upper_bound] = parent.lon
+          elsif ancestor_idx.even? && (constraints[:lon][:lower_bound] < parent.lon)
+            constraints[:lon][:lower_bound] = parent.lon
           end
         end
 
