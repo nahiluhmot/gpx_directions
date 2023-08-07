@@ -45,7 +45,7 @@ module GpxDirections
     # Parsers
 
     def parse_xml(io)
-      Parser.parse(io)
+      Parser.parse(Bzip2::FFI::Reader.new(io))
     end
 
     # Builders
