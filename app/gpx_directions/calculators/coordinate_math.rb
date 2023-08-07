@@ -20,6 +20,11 @@ module GpxDirections
         2 * EARTH_RADIUS_METERS * Math.asin(Math.sqrt(c))
       end
 
+      # Calculate an approximate distance score (faster, no sqrt or trig).
+      def calculate_distance_score(lat1, lon1, lat2, lon2)
+        ((lat1 - lat2)**2) + ((lon1 - lon2)**2)
+      end
+
       def calculate_turn_degrees(node1, node2, node3)
         return 180 if [node1, node2, node3].uniq.length != 3
 

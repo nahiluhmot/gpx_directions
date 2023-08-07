@@ -27,7 +27,7 @@ module GpxDirections
         until to_consider.empty?
           idx = to_consider.shift
           node = @nodes[idx]
-          distance = CoordinateMath.calculate_distance_meters(node.lat, node.lon, lat, lon)
+          distance = CoordinateMath.calculate_distance_score(node.lat, node.lon, lat, lon)
 
           if distance < best_distance
             best_node = node
@@ -135,7 +135,7 @@ module GpxDirections
         best_possible_lat = lat.clamp(constraints.lat.lower_bound, constraints.lat.upper_bound)
         best_possible_lon = lon.clamp(constraints.lon.lower_bound, constraints.lon.upper_bound)
 
-        CoordinateMath.calculate_distance_meters(
+        CoordinateMath.calculate_distance_score(
           best_possible_lat,
           best_possible_lon,
           lat,
