@@ -127,8 +127,8 @@ module GpxDirections
 
         constraints = calculate_lat_lon_constraints(idx)
 
-        best_possible_lat = lat.clamp(*constraints[:lat].values_at(:lower_bound, :upper_bound))
-        best_possible_lon = lon.clamp(*constraints[:lon].values_at(:lower_bound, :upper_bound))
+        best_possible_lat = lat.clamp(constraints.min_lat, constraints.max_lat)
+        best_possible_lon = lon.clamp(constraints.min_lon, constraints.max_lon)
 
         CoordinateMath.calculate_distance_score(
           best_possible_lat,
@@ -139,10 +139,12 @@ module GpxDirections
       end
 
       def calculate_lat_lon_constraints(idx)
-        constraints = {
-          lat: {lower_bound: -Float::INFINITY, upper_bound: Float::INFINITY},
-          lon: {lower_bound: -Float::INFINITY, upper_bound: Float::INFINITY}
-        }
+        constraints = LatLonConstraints.new(
+          min_lat: -Float::INFINITY,
+          min_lon: -Float::INFINITY,
+          max_lat: Float::INFINITY,
+          max_lon: Float::INFINITY
+        )
 
         tree_ancestors(idx).each do |ancestor_idx|
           next if ancestor_idx.zero?
@@ -151,17 +153,17 @@ module GpxDirections
           parent = @nodes[pidx]
 
           if consider_lat?(pidx)
-            if ancestor_idx.odd? && (constraints[:lat][:upper_bound] > parent.lat)
-              constraints[:lat][:upper_bound] = parent.lat
+            if ancestor_idx.odd? && (constraints.max_lat > parent.lat)
+              constraints.max_lat = parent.lat
             end
 
-            if ancestor_idx.even? && (constraints[:lat][:lower_bound] < parent.lat)
-              constraints[:lat][:lower_bound] = parent.lat
+            if ancestor_idx.even? && (constraints.min_lat < parent.lat)
+              constraints.min_lat = parent.lat
             end
-          elsif ancestor_idx.odd? && (constraints[:lon][:upper_bound] > parent.lon)
-            constraints[:lon][:upper_bound] = parent.lon
-          elsif ancestor_idx.even? && (constraints[:lon][:lower_bound] < parent.lon)
-            constraints[:lon][:lower_bound] = parent.lon
+          elsif ancestor_idx.odd? && (constraints.max_lon > parent.lon)
+            constraints.max_lon = parent.lon
+          elsif ancestor_idx.even? && (constraints.min_lon < parent.lon)
+            constraints.min_lon = parent.lon
           end
         end
 

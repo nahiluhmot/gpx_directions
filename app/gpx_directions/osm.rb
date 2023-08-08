@@ -32,7 +32,7 @@ module GpxDirections
     Map = Struct.new(:bounds, :nodes, :ways, keyword_init: true)
 
     # GPS Bounds of a Map.
-    Bounds = Struct.new(:minlat, :minlon, :maxlat, :maxlon, keyword_init: true)
+    Bounds = Struct.new(:min_lat, :min_lon, :max_lat, :max_lon, keyword_init: true)
 
     # An XY coordinate on a Map.
     Node = Struct.new(:id, :lat, :lon, keyword_init: true)
@@ -63,12 +63,12 @@ module GpxDirections
     end
 
     def build_bounds(parse_bounds)
-      minlat = BigDecimal(parse_bounds.minlat)
-      minlon = BigDecimal(parse_bounds.minlon)
-      maxlat = BigDecimal(parse_bounds.maxlat)
-      maxlon = BigDecimal(parse_bounds.maxlon)
+      min_lat = BigDecimal(parse_bounds.minlat)
+      min_lon = BigDecimal(parse_bounds.minlon)
+      max_lat = BigDecimal(parse_bounds.maxlat)
+      max_lon = BigDecimal(parse_bounds.maxlon)
 
-      Bounds.new(minlat:, minlon:, maxlat:, maxlon:)
+      Bounds.new(min_lat:, min_lon:, max_lat:, max_lon:)
     end
 
     def build_nodes(parse_nodes, node_ids)

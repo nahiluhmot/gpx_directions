@@ -15,7 +15,7 @@ module GpxDirections
         steps = []
 
         start = node_ways.first
-        steps << Step.start_on(node_ways.first)
+        steps << Step.start_on(node_ways.first.node)
 
         iterator = [start, start].to_enum + node_ways.to_enum
         iterator.each_cons(3) do |last_node_way, curr_node_way, next_node_way|

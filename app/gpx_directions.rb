@@ -17,27 +17,70 @@ require "gpx_directions/sorting"
 module GpxDirections
   module_function
 
+  DEFAULT_PADDING = BigDecimal("0.1")
+
   Logger = ::Logger.new($stderr).tap do |logger|
     logger.formatter = proc do |severity, datetime, progname, msg|
       "#{severity[0]} #{datetime.iso8601} #{msg}\n"
     end
   end
 
-  def generate_directions(gpx_filepath:, osm_filepath:)
-    Logger.info("parsing gpx file at #{gpx_filepath}")
-    gpx_route = File
-      .open(gpx_filepath, &Gpx.method(:parse_xml))
-      .then(&Gpx.method(:build_route))
+  class << self
+    def generate_directions(gpx_filepath:, osm_filepath:)
+      gpx_route = load_gpx_route(gpx_filepath)
+      constraints = calculate_route_constraints(gpx_route)
+      osm_map = load_osm_map(osm_filepath, constraints)
+      directions = calculate_directions(osm_map, gpx_route)
 
-    Logger.info("parsing osm file at #{osm_filepath}")
-    osm_map = File
-      .open(osm_filepath, &Osm.method(:parse_xml))
-      .then(&Osm.method(:build_map))
+      Serializers.show_directions(directions)
+    end
 
-    Logger.info("calculating directions")
-    directions = Calculators.calculate_directions(osm_map, gpx_route)
+    private
 
-    Logger.info("serializing directions")
-    Serializers.show_directions(directions)
+    def load_gpx_route(path)
+      Logger.info("parsing gpx file at #{path}")
+
+      gpx_route = File
+        .open(path, &Gpx.method(:parse_xml))
+        .then(&Gpx.method(:build_route))
+
+      Logger.info("parsed route #{Serializers.show_route(gpx_route)}")
+
+      gpx_route
+    end
+
+    def load_osm_map(path, _constraints)
+      Logger.info("parsing osm file at #{path}")
+
+      osm_map = File
+        .open(path, &Osm.method(:parse_xml))
+        .then(&Osm.method(:build_map))
+
+      Logger.info("parsed osm map #{Serializers.show_map(osm_map)}")
+
+      osm_map
+    end
+
+    def calculate_directions(osm_map, gpx_route)
+      Logger.info("calculating directions")
+
+      directions = Calculators.calculate_directions(osm_map, gpx_route)
+
+      Logger.info("calculated directions with #{directions.steps.count} steps")
+
+      directions
+    end
+
+    def calculate_route_constraints(gpx_route)
+      Logger.info("calculating route bounds")
+
+      constraints = Calculators
+        .calculate_route_constraints(gpx_route)
+        .then { |c| Calculators.add_padding_to_constraint(DEFAULT_PADDING, c) }
+
+      Logger.info("calculated route bounds #{Serializers.show_constraints(constraints)}")
+
+      constraints
+    end
   end
 end

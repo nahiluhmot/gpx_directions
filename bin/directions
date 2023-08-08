@@ -20,8 +20,8 @@ ARGV.each do |path|
 end
 
 directions = GpxDirections.generate_directions(
-  gpx_filepath: ARGV[0]
-  osm_filepath: ARGV[1],
+  gpx_filepath: ARGV[0],
+  osm_filepath: ARGV[1]
 )
 
 puts directions
