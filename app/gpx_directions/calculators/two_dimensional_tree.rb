@@ -69,7 +69,7 @@ module GpxDirections
         to_insert = [[0, nodes.length - 1, 0]]
 
         until to_insert.empty?
-          start_idx, end_idx, level = to_insert.shift
+          start_idx, end_idx, level = to_insert.pop
 
           next if start_idx > end_idx
 

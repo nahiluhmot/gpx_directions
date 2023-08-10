@@ -7,7 +7,7 @@ module GpxDirections
       to_sort = [[low_idx, high_idx]]
 
       until to_sort.empty?
-        start_idx, end_idx = to_sort.shift
+        start_idx, end_idx = to_sort.pop
 
         next if start_idx >= end_idx
 
