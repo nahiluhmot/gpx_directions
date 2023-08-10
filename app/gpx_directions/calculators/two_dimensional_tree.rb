@@ -125,10 +125,10 @@ module GpxDirections
       def calculate_best_possible_distance(idx, lat, lon)
         return Float::INFINITY unless @nodes.key?(idx)
 
-        constraints = calculate_lat_lon_constraints(idx)
+        bounds = calculate_lat_lon_bounds(idx)
 
-        best_possible_lat = lat.clamp(constraints.min_lat, constraints.max_lat)
-        best_possible_lon = lon.clamp(constraints.min_lon, constraints.max_lon)
+        best_possible_lat = lat.clamp(bounds.min_lat, bounds.max_lat)
+        best_possible_lon = lon.clamp(bounds.min_lon, bounds.max_lon)
 
         CoordinateMath.calculate_distance_score(
           best_possible_lat,
@@ -138,8 +138,8 @@ module GpxDirections
         )
       end
 
-      def calculate_lat_lon_constraints(idx)
-        constraints = LatLonConstraints.new(
+      def calculate_lat_lon_bounds(idx)
+        bounds = Bounds.new(
           min_lat: -Float::INFINITY,
           min_lon: -Float::INFINITY,
           max_lat: Float::INFINITY,
@@ -153,21 +153,21 @@ module GpxDirections
           parent = @nodes[pidx]
 
           if consider_lat?(pidx)
-            if ancestor_idx.odd? && (constraints.max_lat > parent.lat)
-              constraints.max_lat = parent.lat
+            if ancestor_idx.odd? && (bounds.max_lat > parent.lat)
+              bounds.max_lat = parent.lat
             end
 
-            if ancestor_idx.even? && (constraints.min_lat < parent.lat)
-              constraints.min_lat = parent.lat
+            if ancestor_idx.even? && (bounds.min_lat < parent.lat)
+              bounds.min_lat = parent.lat
             end
-          elsif ancestor_idx.odd? && (constraints.max_lon > parent.lon)
-            constraints.max_lon = parent.lon
-          elsif ancestor_idx.even? && (constraints.min_lon < parent.lon)
-            constraints.min_lon = parent.lon
+          elsif ancestor_idx.odd? && (bounds.max_lon > parent.lon)
+            bounds.max_lon = parent.lon
+          elsif ancestor_idx.even? && (bounds.min_lon < parent.lon)
+            bounds.min_lon = parent.lon
           end
         end
 
-        constraints
+        bounds
       end
 
       def tree_ancestors(idx)

@@ -33,10 +33,8 @@ module GpxDirections
         c = calculate_distance_meters(node1.lat, node1.lon, node3.lat, node3.lon)
 
         acos_arg = ((a**2) + (b**2) - (c**2)) / (2 * a * b)
-        acos_arg = -1 if acos_arg < -1
-        acos_arg = 1 if acos_arg > 1
 
-        radians = Math.acos(acos_arg)
+        radians = Math.acos(acos_arg.clamp(-1, 1))
         degrees = radians * 180 / Math::PI
 
         cross_product = calculate_cross_product(

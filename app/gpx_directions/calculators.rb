@@ -32,7 +32,7 @@ module GpxDirections
     NodeWay = Struct.new(:node, :way, keyword_init: true)
 
     # Minimum and maximum bounds for latitude and longitude.
-    LatLonConstraints = Struct.new(
+    Bounds = Struct.new(
       :min_lat,
       :max_lat,
       :min_lon,
@@ -54,22 +54,22 @@ module GpxDirections
       DirectionsCalculator.calculate_directions(node_ways)
     end
 
-    def calculate_route_constraints(gpx_route)
-      constraints = LatLonConstraints.new
+    def calculate_route_bounds(gpx_route)
+      bounds = Bounds.new
       points = gpx_route.points
 
-      constraints.min_lat, constraints.max_lat = points.minmax_by(&:lat).map(&:lat)
-      constraints.min_lon, constraints.max_lon = points.minmax_by(&:lon).map(&:lon)
+      bounds.min_lat, bounds.max_lat = points.minmax_by(&:lat).map(&:lat)
+      bounds.min_lon, bounds.max_lon = points.minmax_by(&:lon).map(&:lon)
 
-      constraints
+      bounds
     end
 
-    def add_padding_to_constraint(padding, constraint)
-      LatLonConstraints.new(
-        min_lat: constraint.min_lat - padding,
-        max_lat: constraint.max_lat + padding,
-        min_lon: constraint.min_lon - padding,
-        max_lon: constraint.max_lon + padding
+    def add_padding_to_bounds(padding, bounds)
+      Bounds.new(
+        min_lat: bounds.min_lat - padding,
+        max_lat: bounds.max_lat + padding,
+        min_lon: bounds.min_lon - padding,
+        max_lon: bounds.max_lon + padding
       )
     end
   end

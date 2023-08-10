@@ -15,9 +15,7 @@ require "gpx_directions/sorting"
 
 # Top-level functions.
 module GpxDirections
-  module_function
-
-  DEFAULT_PADDING = BigDecimal("0.1")
+  DEFAULT_PADDING = BigDecimal("0.01")
 
   Logger = ::Logger.new($stderr).tap do |logger|
     logger.formatter = proc do |severity, datetime, progname, msg|
@@ -28,8 +26,8 @@ module GpxDirections
   class << self
     def generate_directions(gpx_filepath:, osm_filepath:)
       gpx_route = load_gpx_route(gpx_filepath)
-      constraints = calculate_route_constraints(gpx_route)
-      osm_map = load_osm_map(osm_filepath, constraints)
+      bounds = calculate_route_bounds(gpx_route)
+      osm_map = load_osm_map(osm_filepath, bounds)
       directions = calculate_directions(osm_map, gpx_route)
 
       Serializers.show_directions(directions)
@@ -49,7 +47,7 @@ module GpxDirections
       gpx_route
     end
 
-    def load_osm_map(path, _constraints)
+    def load_osm_map(path, _bounds)
       Logger.info("parsing osm file at #{path}")
 
       osm_map = File
@@ -71,16 +69,15 @@ module GpxDirections
       directions
     end
 
-    def calculate_route_constraints(gpx_route)
+    def calculate_route_bounds(gpx_route)
       Logger.info("calculating route bounds")
 
-      constraints = Calculators
-        .calculate_route_constraints(gpx_route)
-        .then { |c| Calculators.add_padding_to_constraint(DEFAULT_PADDING, c) }
+      unpadded = Calculators.calculate_route_bounds(gpx_route)
+      padded = Calculators.add_padding_to_bounds(DEFAULT_PADDING, unpadded)
 
-      Logger.info("calculated route bounds #{Serializers.show_constraints(constraints)}")
+      Logger.info("calculated route bounds #{Serializers.show_bounds(padded)}")
 
-      constraints
+      padded
     end
   end
 end

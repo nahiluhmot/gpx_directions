@@ -3,12 +3,12 @@ module GpxDirections
   module Serializers
     module_function
 
-    def show_constraints(constraints)
+    def show_bounds(bounds)
       "{lat: %f..%f, lon: %f..%f}" % [
-        constraints.min_lat,
-        constraints.max_lat,
-        constraints.min_lon,
-        constraints.max_lon
+        bounds.min_lat,
+        bounds.max_lat,
+        bounds.min_lon,
+        bounds.max_lon
       ]
     end
 
@@ -31,7 +31,7 @@ module GpxDirections
     end
 
     def show_map(map)
-      "{nodes: #{map.nodes.count}, ways: #{map.ways.count}, bounds: #{show_constraints(map.bounds)}}"
+      "{nodes: #{map.nodes.count}, ways: #{map.ways.count}}}"
     end
 
     def show_meters(meters)

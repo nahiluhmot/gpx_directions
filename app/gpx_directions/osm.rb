@@ -8,10 +8,7 @@ module GpxDirections
         children: [:osm]
       },
       osm: {
-        children: [:bounds, :node, :way]
-      },
-      bounds: {
-        attrs: [:minlat, :minlon, :maxlat, :maxlon]
+        children: [:node, :way]
       },
       node: {
         attrs: [:id, :lat, :lon]
@@ -29,10 +26,7 @@ module GpxDirections
     )
 
     # Top-level Map hierarchy.
-    Map = Struct.new(:bounds, :nodes, :ways, keyword_init: true)
-
-    # GPS Bounds of a Map.
-    Bounds = Struct.new(:min_lat, :min_lon, :max_lat, :max_lon, keyword_init: true)
+    Map = Struct.new(:nodes, :ways, keyword_init: true)
 
     # An XY coordinate on a Map.
     Node = Struct.new(:id, :lat, :lon, keyword_init: true)
@@ -53,22 +47,12 @@ module GpxDirections
     def build_map(parse_root)
       parse_osm = parse_root.osm.first
 
-      bounds = build_bounds(parse_osm.bounds.first)
       ways = build_ways(parse_osm.way)
 
       node_ids = calculate_node_ids(ways)
       nodes = build_nodes(parse_osm.node, node_ids)
 
-      Map.new(bounds:, nodes:, ways:)
-    end
-
-    def build_bounds(parse_bounds)
-      min_lat = BigDecimal(parse_bounds.minlat)
-      min_lon = BigDecimal(parse_bounds.minlon)
-      max_lat = BigDecimal(parse_bounds.maxlat)
-      max_lon = BigDecimal(parse_bounds.maxlon)
-
-      Bounds.new(min_lat:, min_lon:, max_lat:, max_lon:)
+      Map.new(nodes:, ways:)
     end
 
     def build_nodes(parse_nodes, node_ids)
