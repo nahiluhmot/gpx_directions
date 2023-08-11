@@ -1,4 +1,5 @@
 require "gpx_directions/calculators/coordinate_math"
+require "gpx_directions/calculators/k_means"
 require "gpx_directions/calculators/two_dimensional_tree"
 require "gpx_directions/calculators/way_matcher"
 require "gpx_directions/calculators/directions_calculator"
@@ -44,16 +45,27 @@ module GpxDirections
       bounds = calculate_route_bounds(gpx_route)
       Logger.info("route bounds: #{Serializers.show_bounds(bounds)}")
 
-      padded_bounds = add_padding_to_bounds(bounds, padding)
-      filtered_nodes = osm_map.nodes.select do |node|
-        within_bounds?(padded_bounds, node)
-      end
-      Logger.info(
-        "selected #{filtered_nodes.length} of #{osm_map.nodes.length} within " \
-          "bounds #{Serializers.show_bounds(padded_bounds)}"
-      )
+      bounds_diagonal_km = CoordinateMath
+        .calculate_distance_meters(bounds.min_lat, bounds.min_lon, bounds.max_lat, bounds.max_lon)
+        .then { |meters| (meters / 1000).round(2) }
+      Logger.info("found bounds diagonal of #{bounds_diagonal_km}km")
 
-      Logger.info("building 2D tree")
+      k = Math.sqrt(bounds_diagonal_km).floor.clamp(1, Float::INFINITY)
+      Logger.info("calcuting #{k} clusters")
+      cluster_set = KMeans.new.k_means(k, gpx_route.points)
+
+      padded_bounds_ary = cluster_set
+        .clusters
+        .map { |cluster| add_padding_to_bounds(cluster.bounds, padding) }
+
+      Logger.info("selecting nodes within clusters")
+      filtered_nodes = osm_map.nodes.select do |node|
+        padded_bounds_ary.any? do |bounds|
+          within_bounds?(bounds, node)
+        end
+      end
+
+      Logger.info("building 2D tree with #{filtered_nodes.length} / #{osm_map.nodes.length} nodes")
       node_tree = TwoDimensionalTree.build(filtered_nodes)
 
       Logger.info("matching points to nodes")
