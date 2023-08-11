@@ -10,6 +10,14 @@ module GpxDirections
 
       def initialize
         @nodes = {}
+        @bounds_by_index = {
+          0 => Bounds.new(
+            min_lat: -Float::INFINITY,
+            max_lat: Float::INFINITY,
+            min_lon: -Float::INFINITY,
+            max_lon: Float::INFINITY
+          )
+        }
       end
 
       def find_nearest_node(lat, lon)
@@ -139,35 +147,29 @@ module GpxDirections
       end
 
       def calculate_lat_lon_bounds(idx)
-        bounds = Bounds.new(
-          min_lat: -Float::INFINITY,
-          min_lon: -Float::INFINITY,
-          max_lat: Float::INFINITY,
-          max_lon: Float::INFINITY
-        )
+        tree_ancestors(idx).reverse_each.each_cons(2) do |parent_idx, child_idx|
+          next if @bounds_by_index.key?(child_idx)
 
-        tree_ancestors(idx).each do |ancestor_idx|
-          next if ancestor_idx.zero?
+          parent = @nodes[parent_idx]
+          bounds = @bounds_by_index[parent_idx].dup
+          @bounds_by_index[child_idx] = bounds
 
-          pidx = up(ancestor_idx)
-          parent = @nodes[pidx]
-
-          if consider_lat?(pidx)
-            if ancestor_idx.odd? && (bounds.max_lat > parent.lat)
-              bounds.max_lat = parent.lat
+          if consider_lat?(parent_idx)
+            if child_idx.odd?
+              bounds.max_lat = bounds.max_lat.clamp(-Float::INFINITY, parent.lat)
             end
 
-            if ancestor_idx.even? && (bounds.min_lat < parent.lat)
-              bounds.min_lat = parent.lat
+            if child_idx.even?
+              bounds.min_lat = bounds.min_lat.clamp(parent.lat, Float::INFINITY)
             end
-          elsif ancestor_idx.odd? && (bounds.max_lon > parent.lon)
-            bounds.max_lon = parent.lon
-          elsif ancestor_idx.even? && (bounds.min_lon < parent.lon)
-            bounds.min_lon = parent.lon
+          elsif child_idx.odd?
+            bounds.max_lon = bounds.max_lon.clamp(-Float::INFINITY, parent.lon)
+          elsif child_idx.even?
+            bounds.min_lon = bounds.min_lon.clamp(parent.lon, Float::INFINITY)
           end
         end
 
-        bounds
+        @bounds_by_index[idx]
       end
 
       def tree_ancestors(idx)
@@ -175,7 +177,7 @@ module GpxDirections
         ancestor_idx = idx
 
         loop do
-          ancestors.push(ancestor_idx)
+          ancestors << ancestor_idx
 
           break if ancestor_idx.zero?
 

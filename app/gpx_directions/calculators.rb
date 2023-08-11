@@ -40,17 +40,33 @@ module GpxDirections
       keyword_init: true
     )
 
-    def calculate_directions(osm_map, gpx_route)
-      node_tree = TwoDimensionalTree.build(osm_map.nodes)
+    def calculate_directions(osm_map, gpx_route, padding: BigDecimal("0.01"))
+      bounds = calculate_route_bounds(gpx_route)
+      Logger.info("route bounds: #{Serializers.show_bounds(bounds)}")
 
-      matching_nodes = gpx_route.points.map do |point|
-        node_tree.find_nearest_node(point.lat, point.lon)
+      padded_bounds = add_padding_to_bounds(bounds, padding)
+      filtered_nodes = osm_map.nodes.select do |node|
+        within_bounds?(padded_bounds, node)
       end
+      Logger.info(
+        "selected #{filtered_nodes.length} of #{osm_map.nodes.length} within " \
+          "bounds #{Serializers.show_bounds(padded_bounds)}"
+      )
 
+      Logger.info("building 2D tree")
+      node_tree = TwoDimensionalTree.build(filtered_nodes)
+
+      Logger.info("matching points to nodes")
+      matching_nodes = gpx_route
+        .points
+        .map { |point| node_tree.find_nearest_node(point.lat, point.lon) }
+
+      Logger.info("matching nodes to ways")
       node_ways = WayMatcher
         .build(osm_map.ways)
         .match_node_ways(matching_nodes)
 
+      Logger.info("translating node ways to directions")
       DirectionsCalculator.calculate_directions(node_ways)
     end
 
@@ -64,7 +80,12 @@ module GpxDirections
       bounds
     end
 
-    def add_padding_to_bounds(padding, bounds)
+    def within_bounds?(bounds, node)
+      node.lat.between?(bounds.min_lat, bounds.max_lat) &&
+        node.lon.between?(bounds.min_lon, bounds.max_lon)
+    end
+
+    def add_padding_to_bounds(bounds, padding)
       Bounds.new(
         min_lat: bounds.min_lat - padding,
         max_lat: bounds.max_lat + padding,
