@@ -15,13 +15,19 @@ module GpxDirections
         cluster_set = build_cluster_set(k, points)
         reposition_points(cluster_set)
 
-        max_iterations.times do
+        iter = 0
+
+        while iter < max_iterations
+          iter += 1
+
           recalculate_centroids(cluster_set)
 
           break unless reposition_points(cluster_set)
         end
 
         calculate_bounds(cluster_set)
+
+        Logger.info("computed #{k} clusters in #{iter} iterations")
 
         cluster_set
       end

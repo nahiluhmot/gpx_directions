@@ -22,19 +22,21 @@ module GpxDirections
     logger.formatter = proc do |severity, datetime, progname, msg|
       "#{severity[0]} #{datetime.iso8601} #{msg}\n"
     end
+    logger.level = ::Logger::INFO
   end
 
   class << self
-    def generate_directions(gpx_filepath:, osm_filepath:)
+    def generate_directions(db_filepath:, gpx_filepath:)
       gpx_route = load_gpx_route(gpx_filepath)
-      osm_map = load_osm_map(osm_filepath)
+      cluster_set = calculate_route_clusters(gpx_route)
+      osm_map = load_osm_map_from_db(db_filepath, cluster_set.clusters.map(&:bounds))
       directions = calculate_directions(osm_map, gpx_route)
 
       Serializers.show_directions(directions)
     end
 
     def seed_db(db_filepath:, osm_filepath:)
-      osm_map = load_osm_map(osm_filepath)
+      osm_map = load_osm_map_from_file(osm_filepath)
 
       Logger.info("seeding db at #{db_filepath}")
 
@@ -57,7 +59,7 @@ module GpxDirections
       gpx_route
     end
 
-    def load_osm_map(path)
+    def load_osm_map_from_file(path)
       Logger.info("parsing osm file at #{path}")
 
       osm_map = File
@@ -67,6 +69,26 @@ module GpxDirections
       Logger.info("parsed osm map #{Serializers.show_map(osm_map)}")
 
       osm_map
+    end
+
+    def load_osm_map_from_db(path, bounds_ary, padding: BigDecimal("0.001"))
+      Logger.info("loading map from #{path}")
+
+      padded_bounds_ary = bounds_ary.map do |bounds|
+        Calculators.add_padding_to_bounds(bounds, padding)
+      end
+
+      osm_map = DB.build(path).build_map_for_bounds(*padded_bounds_ary)
+
+      Logger.info("loaded osm map #{Serializers.show_map(osm_map)}")
+
+      osm_map
+    end
+
+    def calculate_route_clusters(gpx_route)
+      Logger.info("calculating route clusters for route with #{gpx_route.points.length} points")
+
+      Calculators.calculate_route_clusters(gpx_route)
     end
 
     def calculate_directions(osm_map, gpx_route)

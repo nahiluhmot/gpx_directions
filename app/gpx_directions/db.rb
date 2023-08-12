@@ -42,8 +42,12 @@ module GpxDirections
     end
 
     def build_map_for_bounds(*bounds_ary)
-      nodes = load_nodes_in_bounds(bounds_ary)
-      ways = load_ways_for_nodes(nodes)
+      nodes = bounds_ary
+        .each_slice(BATCH_SIZE)
+        .flat_map(&method(:load_nodes_in_bounds))
+      ways = nodes
+        .each_slice(BATCH_SIZE)
+        .flat_map(&method(:load_ways_for_nodes))
 
       Osm::Map.new(nodes:, ways:)
     end
@@ -132,15 +136,15 @@ module GpxDirections
         WHERE #{bounds_condition}
       SQL
       args = bounds_ary.flat_map do |bounds|
-        [bounds.min_lat, bounds.max_lat, bounds.min_lon, bounds.max_lon]
+        [bounds.min_lat, bounds.max_lat, bounds.min_lon, bounds.max_lon].map(&:to_digits)
       end
 
       rows = execute(query, args)
 
-      rows.map do |id_str, lat_float, lon_float|
-        id = id_str.to_sym
-        lat = BigDecimal(lat_float)
-        lon = BigDecimal(lon_float)
+      rows.map do |(id_num, lat_float, lon_float)|
+        id = id_num.to_s.to_sym
+        lat = BigDecimal(lat_float, 16)
+        lon = BigDecimal(lon_float, 16)
 
         Osm::Node.new(id:, lat:, lon:)
       end
@@ -158,11 +162,11 @@ module GpxDirections
           WHERE node_ways.node_id IN (#{Array.new(nodes.length, "?").join(",")})
           GROUP BY ways.id, ways.name
         SQL
-        nodes.map(&:id)
+        nodes.map { |node| node.id.to_s }
       )
 
       rows.map do |id_str, name, node_ids_str|
-        id = id_str.to_sym
+        id = id_str.to_s.to_sym
         node_ids = node_ids_str.split(",").map(&:to_sym)
 
         Osm::Way.new(id:, name:, node_ids:)
@@ -170,7 +174,7 @@ module GpxDirections
     end
 
     def execute(query, args = [])
-      Logger.debug("executing sql query: #{query}")
+      Logger.debug { "executing sql query: #{query}" }
 
       @sqlite.execute(query, args)
     end

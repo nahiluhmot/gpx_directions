@@ -6,7 +6,7 @@ require 'bundler/setup'
 require 'gpx_directions'
 
 if ARGV.length != 2
-  puts "USAGE: #{$PROGRAM_NAME} GPX_FILEPATH OSM_FILEPATH"
+  puts "USAGE: #{$PROGRAM_NAME} DB_FILEPATH GPX_FILEPATH"
 
   exit 1
 end
@@ -19,9 +19,8 @@ ARGV.each do |path|
   end
 end
 
-directions = GpxDirections.generate_directions(
-  gpx_filepath: ARGV[0],
-  osm_filepath: ARGV[1]
-)
+db_filepath, gpx_filepath = ARGV
+
+directions = GpxDirections.generate_directions(db_filepath:, gpx_filepath:)
 
 puts directions
