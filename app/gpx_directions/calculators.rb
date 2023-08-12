@@ -1,6 +1,6 @@
 require "gpx_directions/calculators/coordinate_math"
 require "gpx_directions/calculators/directions_calculator"
-require "gpx_directions/calculators/k_means"
+require "gpx_directions/calculators/median_clustering"
 require "gpx_directions/calculators/sorting"
 require "gpx_directions/calculators/two_dimensional_tree"
 require "gpx_directions/calculators/way_matcher"
@@ -61,18 +61,11 @@ module GpxDirections
     end
 
     def calculate_route_clusters(gpx_route)
-      bounds = calculate_route_bounds(gpx_route)
-      meters = CoordinateMath.calculate_distance_meters(
-        bounds.min_lat,
-        bounds.min_lon,
-        bounds.max_lat,
-        bounds.max_lon
-      )
-      km = (meters / 1000).round(1)
-      k = (km / 2).floor.clamp(1, Float::INFINITY)
+      Logger.info("calcuting clusters")
+      cluster_set = MedianClustering.calculate_clusters(gpx_route.points)
 
-      Logger.info("calcuting #{k} clusters for route with bounds diagonal #{km}km")
-      KMeans.new.k_means(k, gpx_route.points)
+      Logger.info("calculated #{cluster_set.clusters.length} clusters")
+      cluster_set
     end
 
     def calculate_route_bounds(gpx_route)

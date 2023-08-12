@@ -25,6 +25,23 @@ module GpxDirections
         ((lat1 - lat2)**2) + ((lon1 - lon2)**2)
       end
 
+      def calculate_area_km2(bounds)
+        len_meters = calculate_distance_meters(
+          bounds.min_lat,
+          bounds.min_lon,
+          bounds.min_lat,
+          bounds.max_lon
+        )
+        height_meters = calculate_distance_meters(
+          bounds.min_lat,
+          bounds.min_lon,
+          bounds.max_lat,
+          bounds.min_lon
+        )
+
+        (len_meters / 1000) * (height_meters / 1000)
+      end
+
       def calculate_turn_degrees(node1, node2, node3)
         return 180 if [node1, node2, node3].uniq.length != 3
 
