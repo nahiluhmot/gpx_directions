@@ -14,7 +14,6 @@ require "gpx_directions/db"
 require "gpx_directions/gpx"
 require "gpx_directions/osm"
 require "gpx_directions/serializers"
-require "gpx_directions/sorting"
 
 # Top-level functions.
 module GpxDirections

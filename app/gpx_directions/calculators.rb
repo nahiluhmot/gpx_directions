@@ -1,8 +1,9 @@
 require "gpx_directions/calculators/coordinate_math"
+require "gpx_directions/calculators/directions_calculator"
 require "gpx_directions/calculators/k_means"
+require "gpx_directions/calculators/sorting"
 require "gpx_directions/calculators/two_dimensional_tree"
 require "gpx_directions/calculators/way_matcher"
-require "gpx_directions/calculators/directions_calculator"
 
 module GpxDirections
   # Business logic for the app.
