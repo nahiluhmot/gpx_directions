@@ -1,13 +1,16 @@
 require "bigdecimal"
+require "bigdecimal/util"
 require "logger"
 
 require "bzip2/ffi"
 require "ox"
 require "sums_up"
+require "sqlite3"
 
 require "gpx_directions/sax"
 
 require "gpx_directions/calculators"
+require "gpx_directions/db"
 require "gpx_directions/gpx"
 require "gpx_directions/osm"
 require "gpx_directions/serializers"
@@ -28,6 +31,16 @@ module GpxDirections
       directions = calculate_directions(osm_map, gpx_route)
 
       Serializers.show_directions(directions)
+    end
+
+    def seed_db(db_filepath:, osm_filepath:)
+      osm_map = load_osm_map(osm_filepath)
+
+      Logger.info("seeding db at #{db_filepath}")
+
+      DB
+        .build(db_filepath)
+        .seed_db(osm_map)
     end
 
     private

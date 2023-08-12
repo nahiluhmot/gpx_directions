@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << File.expand_path("../app", __dir__)
+
+require 'bundler/setup'
+require 'gpx_directions'
+
+if ARGV.length != 2
+  puts "USAGE: #{$PROGRAM_NAME} DB_FILEPATH OSM_FILEPATH"
+
+  exit 1
+end
+
+db_filepath, osm_filepath = ARGV
+
+unless File.file?(osm_filepath)
+  puts "No such file: #{osm_filepath}"
+
+  exit 2
+end
+
+GpxDirections.seed_db(db_filepath:, osm_filepath:)
