@@ -64,7 +64,7 @@ module GpxDirections
   end
 
   # The loaded OSM Map only contains the GPX Route's nodes in order.
-  def load_osm_map_from_db(db_filepath:, gpx_route:, padding_meters: 750)
+  def load_osm_map_from_db(db_filepath:, gpx_route:, padding_meters: 1000)
     logger.info("loading map from #{db_filepath}")
     db = DB.build(db_filepath)
 
