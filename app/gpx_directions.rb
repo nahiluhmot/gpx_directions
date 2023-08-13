@@ -64,11 +64,11 @@ module GpxDirections
   end
 
   # The loaded OSM Map only contains the GPX Route's nodes in order.
-  def load_osm_map_from_db(db_filepath:, gpx_route:, padding_meters: 250)
+  def load_osm_map_from_db(db_filepath:, gpx_route:, padding_meters: 750)
     logger.info("loading map from #{db_filepath}")
     db = DB.build(db_filepath)
 
-    slice_size = ((gpx_route.points.length - 1) / Parallel.processor_count) + 1
+    slice_size = ((gpx_route.points.length - 1) / (Parallel.processor_count * 4)) + 1
     osm_maps = Parallel.map(gpx_route.points.each_slice(slice_size)) do |points|
       padded_bounds_ary = Calculators.calculate_bounds_around_points(points, padding_meters)
       osm_map = db.build_map_for_bounds(padded_bounds_ary)
