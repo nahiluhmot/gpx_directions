@@ -11,7 +11,7 @@ module GpxDirections
         points = points.dup
         to_consider = [[0, points.length.pred, true]]
 
-        cluster_set = ClusterSet.new(clusters: [])
+        bounds_ary = []
 
         until to_consider.empty?
           start_idx, end_idx, consider_lat = to_consider.pop
@@ -21,7 +21,7 @@ module GpxDirections
           bounds = calculate_bounds(points, start_idx, end_idx)
 
           if CoordinateMath.calculate_area_km2(bounds) <= max_cluster_area_km2
-            cluster_set.clusters << Cluster.new(bounds:)
+            bounds_ary << bounds
 
             next
           end
@@ -35,7 +35,7 @@ module GpxDirections
           to_consider << [median_idx + 1, end_idx, !consider_lat]
         end
 
-        cluster_set
+        bounds_ary
       end
 
       def calculate_bounds(points, start_idx, end_idx)

@@ -62,10 +62,10 @@ module GpxDirections
 
     def calculate_route_clusters(gpx_route)
       Logger.info("calcuting clusters")
-      cluster_set = MedianClustering.calculate_clusters(gpx_route.points)
+      bounds_ary = MedianClustering.calculate_clusters(gpx_route.points)
 
-      Logger.info("calculated #{cluster_set.clusters.length} clusters")
-      cluster_set
+      Logger.info("calculated #{bounds_ary.length} clusters")
+      bounds_ary
     end
 
     def calculate_route_bounds(gpx_route)

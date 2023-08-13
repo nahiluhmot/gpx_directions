@@ -63,7 +63,7 @@ module GpxDirections
 
         degrees += 180 if cross_product >= 0
 
-        degrees
+        BigDecimal(degrees, 16)
       end
 
       def calculate_cross_product(lat1, lat2, lon1, lon2)

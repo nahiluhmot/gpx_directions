@@ -21,14 +21,14 @@ module GpxDirections
     logger.formatter = proc do |severity, datetime, progname, msg|
       "#{severity[0]} #{datetime.iso8601} #{msg}\n"
     end
-    logger.level = ::Logger::INFO
+    logger.level = :info
   end
 
   class << self
     def generate_directions(db_filepath:, gpx_filepath:)
       gpx_route = load_gpx_route(gpx_filepath)
-      cluster_set = calculate_route_clusters(gpx_route)
-      osm_map = load_osm_map_from_db(db_filepath, cluster_set.clusters.map(&:bounds))
+      bounds_ary = calculate_route_clusters(gpx_route)
+      osm_map = load_osm_map_from_db(db_filepath, bounds_ary)
       directions = calculate_directions(osm_map, gpx_route)
 
       Serializers.show_directions(directions)
