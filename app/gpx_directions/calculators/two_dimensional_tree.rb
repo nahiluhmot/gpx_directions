@@ -41,8 +41,13 @@ module GpxDirections
             best_distance = distance
           end
 
-          to_consider << left(idx)
-          to_consider << right(idx)
+          if consider_lat?(idx) ? (lat <= node.lat) : (lat <= node.lon)
+            to_consider << left(idx)
+            to_consider << right(idx)
+          else
+            to_consider << right(idx)
+            to_consider << left(idx)
+          end
         end
 
         best_node
@@ -55,8 +60,8 @@ module GpxDirections
         while (node_in_tree = @nodes[idx])
           go_left =
             consider_lat ?
-              (node_in_tree.lat > node_to_insert.lat) :
-              (node_in_tree.lon > node_to_insert.lon)
+              (node_to_insert.lat <= node_in_tree.lat) :
+              (node_to_insert.lon <= node_in_tree.lon)
 
           idx = go_left ? left(idx) : right(idx)
           consider_lat = !consider_lat
@@ -135,15 +140,7 @@ module GpxDirections
       end
 
       def consider_lat?(idx)
-        level = 0
-
-        until idx.zero?
-          idx = up(idx)
-
-          level += 1
-        end
-
-        level.even?
+        Math.log2(idx + 1).floor.even?
       end
 
       def up(idx)

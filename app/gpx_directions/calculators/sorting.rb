@@ -31,9 +31,7 @@ module GpxDirections
         end_idx = high_idx
 
         loop do
-          if (end_idx - start_idx) < 5
-            partition5!(ary, start_idx, end_idx, &comparator)
-
+          if end_idx == start_idx
             return target_idx
           end
 
@@ -54,8 +52,6 @@ module GpxDirections
         end_idx = high_idx
 
         loop do
-          return start_idx if start_idx == end_idx
-
           pivot_idx = median_of_medians_pivot!(list, start_idx, end_idx, &comparator)
           partition_idx = partition!(list, start_idx, end_idx, pivot_idx, &comparator)
 
