@@ -105,18 +105,19 @@ module GpxDirections
     end
 
     def insert_node_ways(ways)
-      node_ways = ways.flat_map do |way|
+      all_node_ways = ways.flat_map do |way|
         way.node_ids.map { |node_id| [node_id.to_s, way.id.to_s] }
       end
 
-      vars = Array.new(node_ways.length, "(?,?)").join(",")
-      query = <<~SQL
-        INSERT INTO node_ways (node_id, way_id) VALUES #{vars}
-        ON CONFLICT DO NOTHING
-      SQL
-      args = node_ways.flatten
+      all_node_ways.each_slice(BATCH_SIZE) do |node_ways|
+        vars = Array.new(node_ways.length, "(?,?)").join(",")
+        query = <<~SQL
+          INSERT INTO node_ways (node_id, way_id) VALUES #{vars}
+          ON CONFLICT DO NOTHING
+        SQL
 
-      execute(query, args)
+        execute(query, node_ways.flatten)
+      end
     end
 
     def load_nodes_in_bounds(bounds_ary)
