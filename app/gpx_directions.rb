@@ -105,7 +105,7 @@ module GpxDirections
       logger.formatter = proc do |severity, datetime, progname, msg|
         "#{severity[0]} #{datetime.iso8601(3)} #{msg}\n"
       end
-      logger.level = :info
+      logger.level = ENV["GPX_DIRECTIONS_LOG_LEVEL"] || :warn
     end
   end
 end
