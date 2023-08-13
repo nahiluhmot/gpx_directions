@@ -82,9 +82,9 @@ module GpxDirections
           next if start_idx > end_idx
 
           comparator = level.even? ? :lat : :lon
-          Sorting.in_place_sort_by!(nodes, start_idx, end_idx, &comparator)
-
           idx = (start_idx + end_idx) / 2
+          Sorting.quick_select!(nodes, start_idx, end_idx, idx, &comparator)
+
           median = nodes[idx]
 
           insert(median)

@@ -7,7 +7,7 @@ module GpxDirections
 
       module_function
 
-      def calculate_clusters(points, max_cluster_area_km2: 2)
+      def calculate_clusters(points, max_cluster_area_km2: 1)
         points = points.dup
         to_consider = [[0, points.length.pred, true]]
 
@@ -27,9 +27,10 @@ module GpxDirections
           end
 
           comparator = consider_lat ? :lat : :lon
-          Sorting.in_place_sort_by!(points, start_idx, end_idx, &comparator)
-
           median_idx = (start_idx + end_idx) / 2
+
+          Sorting.quick_select!(points, start_idx, end_idx, median_idx, &comparator)
+
           to_consider << [start_idx, median_idx, !consider_lat]
           to_consider << [median_idx + 1, end_idx, !consider_lat]
         end
