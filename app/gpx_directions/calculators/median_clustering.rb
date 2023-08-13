@@ -7,7 +7,7 @@ module GpxDirections
 
       module_function
 
-      def calculate_clusters(points, max_cluster_area_km2: 1)
+      def calculate_clusters(points, max_cluster_area_km2: BigDecimal("0.05"))
         points = points.dup
         to_consider = [[0, points.length.pred, true]]
 

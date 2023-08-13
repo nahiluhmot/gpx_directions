@@ -1,7 +1,7 @@
 module GpxDirections
   # Intercation with a SQLite DB.
   class DB
-    BATCH_SIZE = 100
+    BATCH_SIZE = 1000
 
     TABLES = {
       nodes: {

@@ -19,7 +19,7 @@ require "gpx_directions/serializers"
 module GpxDirections
   Logger = ::Logger.new($stderr).tap do |logger|
     logger.formatter = proc do |severity, datetime, progname, msg|
-      "#{severity[0]} #{datetime.iso8601} #{msg}\n"
+      "#{severity[0]} #{datetime.iso8601(3)} #{msg}\n"
     end
     logger.level = :info
   end
@@ -70,7 +70,7 @@ module GpxDirections
       osm_map
     end
 
-    def load_osm_map_from_db(path, bounds_ary, padding: BigDecimal("0.001"))
+    def load_osm_map_from_db(path, bounds_ary, padding: BigDecimal("0.0005"))
       Logger.info("loading map from #{path}")
 
       padded_bounds_ary = bounds_ary.map do |bounds|

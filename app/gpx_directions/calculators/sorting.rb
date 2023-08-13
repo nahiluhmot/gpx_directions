@@ -31,6 +31,12 @@ module GpxDirections
         end_idx = high_idx
 
         loop do
+          if (end_idx - start_idx) < 5
+            partition5!(ary, start_idx, end_idx, &comparator)
+
+            return target_idx
+          end
+
           partition_idx = partition!(ary, start_idx, end_idx, target_idx, &comparator)
 
           if partition_idx == target_idx
