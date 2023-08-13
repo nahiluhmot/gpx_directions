@@ -28,8 +28,7 @@ module GpxDirections
   class << self
     def generate_directions(db_filepath:, gpx_filepath:)
       gpx_route = load_gpx_route(gpx_filepath)
-      bounds_ary = calculate_route_clusters(gpx_route)
-      osm_map = load_osm_map_from_db(db_filepath, bounds_ary)
+      osm_map = load_osm_map_from_db(db_filepath, gpx_route)
       directions = calculate_directions(osm_map, gpx_route)
 
       Serializers.show_directions(directions)
@@ -71,11 +70,16 @@ module GpxDirections
       osm_map
     end
 
-    def load_osm_map_from_db(path, bounds_ary, padding: BigDecimal("0.0005"))
+    def load_osm_map_from_db(path, gpx_route, padding: BigDecimal("0.0005")) # .00005 lat/lons =~ 500m
       Logger.info("loading map from #{path}")
 
-      padded_bounds_ary = bounds_ary.map do |bounds|
-        Calculators.add_padding_to_bounds(bounds, padding)
+      padded_bounds_ary = gpx_route.points.map do |point|
+        Calculators::Bounds.new(
+          min_lat: point.lat - padding,
+          max_lat: point.lat + padding,
+          min_lon: point.lon - padding,
+          max_lon: point.lon + padding
+        )
       end
 
       osm_map = DB.build(path).build_map_for_bounds(*padded_bounds_ary)
@@ -83,12 +87,6 @@ module GpxDirections
       Logger.info("loaded osm map #{Serializers.show_map(osm_map)}")
 
       osm_map
-    end
-
-    def calculate_route_clusters(gpx_route)
-      Logger.info("calculating route clusters for route with #{gpx_route.points.length} points")
-
-      Calculators.calculate_route_clusters(gpx_route)
     end
 
     def calculate_directions(osm_map, gpx_route)

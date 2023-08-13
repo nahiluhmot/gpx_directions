@@ -1,6 +1,5 @@
 require "gpx_directions/calculators/coordinate_math"
 require "gpx_directions/calculators/directions_calculator"
-require "gpx_directions/calculators/median_clustering"
 require "gpx_directions/calculators/sorting"
 require "gpx_directions/calculators/two_dimensional_tree"
 require "gpx_directions/calculators/way_matcher"
@@ -59,33 +58,6 @@ module GpxDirections
 
       Logger.info("translating node ways to directions")
       DirectionsCalculator.calculate_directions(node_ways)
-    end
-
-    def calculate_route_clusters(gpx_route)
-      Logger.info("calcuting clusters")
-      bounds_ary = MedianClustering.calculate_clusters(gpx_route.points)
-
-      Logger.info("calculated #{bounds_ary.length} clusters")
-      bounds_ary
-    end
-
-    def calculate_route_bounds(gpx_route)
-      bounds = Bounds.new
-      points = gpx_route.points
-
-      bounds.min_lat, bounds.max_lat = points.minmax_by(&:lat).map(&:lat)
-      bounds.min_lon, bounds.max_lon = points.minmax_by(&:lon).map(&:lon)
-
-      bounds
-    end
-
-    def add_padding_to_bounds(bounds, padding)
-      Bounds.new(
-        min_lat: bounds.min_lat - padding,
-        max_lat: bounds.max_lat + padding,
-        min_lon: bounds.min_lon - padding,
-        max_lon: bounds.max_lon + padding
-      )
     end
   end
 end
