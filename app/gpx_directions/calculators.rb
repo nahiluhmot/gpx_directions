@@ -47,9 +47,10 @@ module GpxDirections
       node_tree = TwoDimensionalTree.build(osm_map.nodes)
 
       Logger.info("matching #{gpx_route.points.length} points to nodes")
-      matching_nodes = gpx_route
-        .points
-        .map { |point| node_tree.find_nearest_node(point.lat, point.lon) }
+      slice_size = (gpx_route.points.length / Parallel.processor_count) + 1
+      matching_nodes = Parallel.flat_map(gpx_route.points.each_slice(slice_size)) do |slice|
+        slice.map { |point| node_tree.find_nearest_node(point.lat, point.lon) }
+      end
 
       Logger.info("matching nodes to #{osm_map.ways.length} ways")
       node_ways = WayMatcher

@@ -4,6 +4,7 @@ require "logger"
 
 require "bzip2/ffi"
 require "ox"
+require "parallel"
 require "sums_up"
 require "sqlite3"
 

@@ -68,6 +68,7 @@ module GpxDirections
         end
 
         @nodes[idx] = node_to_insert
+        calculate_lat_lon_bounds(idx)
 
         self
       end
@@ -100,9 +101,9 @@ module GpxDirections
       private
 
       def calculate_best_possible_distance(idx, lat, lon)
-        return Float::INFINITY unless @nodes.key?(idx)
+        bounds = @bounds_by_index[idx]
 
-        bounds = calculate_lat_lon_bounds(idx)
+        return Float::INFINITY unless bounds
 
         best_possible_lat = lat.clamp(bounds.min_lat, bounds.max_lat)
         best_possible_lon = lon.clamp(bounds.min_lon, bounds.max_lon)
