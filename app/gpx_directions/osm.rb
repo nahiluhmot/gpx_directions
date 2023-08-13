@@ -91,13 +91,15 @@ module GpxDirections
       end
     end
 
+    # Preserves the order of the nodes and ways.
     def merge_maps(maps)
-      nodes_by_id = {}
+      nodes = []
       ways_by_id = {}
       node_ids_by_way_id = Hash.new { |h, way_id| h[way_id] = Set.new }
 
       maps.each do |map|
-        map.nodes.each { |node| nodes_by_id[node.id] = node }
+        nodes.concat(map.nodes)
+
         map.ways.each do |way|
           ways_by_id[way.id] = way
 
@@ -105,7 +107,6 @@ module GpxDirections
         end
       end
 
-      nodes = nodes_by_id.values
       ways = ways_by_id.map do |way_id, way|
         Way.new(
           id: way.id,

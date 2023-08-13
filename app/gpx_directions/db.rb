@@ -170,7 +170,7 @@ module GpxDirections
     end
 
     def execute(query, args = [])
-      Logger.debug { "executing sql query: #{query}" }
+      GpxDirections.logger.debug { "executing sql query: #{query}" }
 
       @sqlite.execute(query, args)
     end
