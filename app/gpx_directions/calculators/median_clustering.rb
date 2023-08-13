@@ -2,9 +2,6 @@ module GpxDirections
   module Calculators
     # Clusters by median lat, then median lon, then median lat...
     module MedianClustering
-      ClusterSet = Struct.new(:clusters, keyword_init: true)
-      Cluster = Struct.new(:bounds, keyword_init: true)
-
       module_function
 
       def calculate_clusters(points, max_cluster_area_km2: BigDecimal("0.05"))
