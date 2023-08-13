@@ -23,14 +23,14 @@ module GpxDirections
       def find_nearest_node(lat, lon)
         return if @nodes.empty?
 
-        to_consider = [0]
+        to_consider = [[0, 0]]
+
         best_node = nil
         best_distance = Float::INFINITY
 
         until to_consider.empty?
-          idx = to_consider.shift
+          idx, best_possible_distance = to_consider.shift
 
-          best_possible_distance = calculate_best_possible_distance(idx, lat, lon)
           next if best_distance < best_possible_distance
 
           node = @nodes[idx]
@@ -41,12 +41,17 @@ module GpxDirections
             best_distance = distance
           end
 
-          if consider_lat?(idx) ? (lat <= node.lat) : (lat <= node.lon)
-            to_consider << left(idx)
-            to_consider << right(idx)
+          l_idx = left(idx)
+          r_idx = right(idx)
+          l_best = calculate_best_possible_distance(l_idx, lat, lon)
+          r_best = calculate_best_possible_distance(r_idx, lat, lon)
+
+          if l_best < r_best
+            to_consider << [l_idx, l_best]
+            to_consider << [r_idx, r_best]
           else
-            to_consider << right(idx)
-            to_consider << left(idx)
+            to_consider << [r_idx, r_best]
+            to_consider << [l_idx, l_best]
           end
         end
 
@@ -117,7 +122,7 @@ module GpxDirections
       end
 
       def calculate_lat_lon_bounds(child_idx)
-        return @bounds_by_index[child_idx] if @bounds_by_index.key?(child_idx)
+        return if child_idx.zero?
 
         parent_idx = up(child_idx)
         parent = @nodes[parent_idx]
