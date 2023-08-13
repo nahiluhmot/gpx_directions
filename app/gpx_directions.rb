@@ -1,4 +1,5 @@
 require "bigdecimal"
+require "bigdecimal/math"
 require "bigdecimal/util"
 require "logger"
 
@@ -70,19 +71,18 @@ module GpxDirections
       osm_map
     end
 
-    def load_osm_map_from_db(path, gpx_route, padding: BigDecimal("0.0005")) # .00005 lat/lons =~ 500m
+    def load_osm_map_from_db(path, gpx_route, padding_meters: 100)
       Logger.info("loading map from #{path}")
 
-      padded_bounds_ary = gpx_route.points.map do |point|
-        Calculators::Bounds.new(
-          min_lat: point.lat - padding,
-          max_lat: point.lat + padding,
-          min_lon: point.lon - padding,
-          max_lon: point.lon + padding
-        )
+      slice_size = ((gpx_route.points.length - 1) / Parallel.processor_count) + 1
+      osm_maps = Parallel.flat_map(gpx_route.points.each_slice(slice_size)) do |points|
+        padded_bounds_ary = Calculators.calculate_bounds_around_points(points, padding_meters)
+
+        DB.build(path).build_map_for_bounds(padded_bounds_ary)
       end
 
-      osm_map = DB.build(path).build_map_for_bounds(*padded_bounds_ary)
+      Logger.info("merging #{osm_maps.length} maps")
+      osm_map = Osm.merge_maps(osm_maps)
 
       Logger.info("loaded osm map #{Serializers.show_map(osm_map)}")
 
@@ -92,8 +92,20 @@ module GpxDirections
     def calculate_directions(osm_map, gpx_route)
       Logger.info("calculating directions")
 
-      directions = Calculators.calculate_directions(osm_map, gpx_route)
+      Logger.info("building 2D tree with #{osm_map.nodes.length} nodes")
+      node_tree = Calculators.build_2d_tree(osm_map.nodes)
 
+      Logger.info("matching #{gpx_route.points.length} points to nodes")
+      slice_size = ((gpx_route.points.length - 1) / Parallel.processor_count) + 1
+      matching_nodes = Parallel.flat_map(gpx_route.points.each_slice(slice_size)) do |slice|
+        slice.map { |point| node_tree.find_nearest_node(point.lat, point.lon) }
+      end
+
+      Logger.info("matching nodes to #{osm_map.ways.length} ways")
+      node_ways = Calculators.match_nodes_to_ways(matching_nodes, osm_map.ways)
+
+      Logger.info("translating #{node_ways.length} node ways to directions")
+      directions = Calculators.calculate_directions(node_ways)
       Logger.info("calculated directions with #{directions.steps.count} steps")
 
       directions

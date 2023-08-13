@@ -2,8 +2,13 @@ module GpxDirections
   module Calculators
     # Math for GPS coordinates.
     module CoordinateMath
-      EARTH_RADIUS_METERS = 6_378_000
-      ONE_DEGREE_RADIANS = Math::PI / 180
+      PI = BigMath::PI(10)
+      EARTH_CIRCUMFRENCE = BigDecimal("40075000")
+      EARTH_RADIUS_METERS = EARTH_CIRCUMFRENCE / (2 * PI)
+      ONE_DEGREE_RADIANS = PI / 180
+
+      METERS_PER_DEGREE_LATITUDE = EARTH_CIRCUMFRENCE / 360
+      DEGREES_LATITUDE_PER_METER = 1 / METERS_PER_DEGREE_LATITUDE
 
       module_function
 
@@ -25,21 +30,19 @@ module GpxDirections
         ((lat1 - lat2)**2) + ((lon1 - lon2)**2)
       end
 
-      def calculate_area_km2(bounds)
-        len_meters = calculate_distance_meters(
-          bounds.min_lat,
-          bounds.min_lon,
-          bounds.min_lat,
-          bounds.max_lon
-        )
-        height_meters = calculate_distance_meters(
-          bounds.min_lat,
-          bounds.min_lon,
-          bounds.max_lat,
-          bounds.min_lon
-        )
+      def calculate_bounds_around_point(point, padding_meters)
+        meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * Math.cos(point.lat * ONE_DEGREE_RADIANS)
 
-        (len_meters / 1000) * (height_meters / 1000)
+        delta_meters = padding_meters / 2
+        delta_lat = delta_meters * DEGREES_LATITUDE_PER_METER
+        delta_lon = delta_meters / meters_per_degree_longitude
+
+        Bounds.new(
+          min_lat: point.lat - delta_lat,
+          max_lat: point.lat + delta_lat,
+          min_lon: point.lon - delta_lon,
+          max_lon: point.lon + delta_lon
+        )
       end
 
       def calculate_turn_degrees(node1, node2, node3)

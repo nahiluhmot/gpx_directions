@@ -36,7 +36,7 @@ module GpxDirections
 
     def show_meters(meters)
       if meters > 1000
-        "#{(meters / 1000).round(1)}km"
+        "#{(meters / 1000).round(1).to_digits}km"
       else
         "#{meters.round}m"
       end

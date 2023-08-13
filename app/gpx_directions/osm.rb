@@ -90,5 +90,31 @@ module GpxDirections
         way.node_ids.each(&set.method(:add))
       end
     end
+
+    def merge_maps(maps)
+      nodes_by_id = {}
+      ways_by_id = {}
+      node_ids_by_way_id = Hash.new { |h, way_id| h[way_id] = Set.new }
+
+      maps.each do |map|
+        map.nodes.each { |node| nodes_by_id[node.id] = node }
+        map.ways.each do |way|
+          ways_by_id[way.id] = way
+
+          way.node_ids.each(&node_ids_by_way_id[way.id].method(:add))
+        end
+      end
+
+      nodes = nodes_by_id.values
+      ways = ways_by_id.map do |way_id, way|
+        Way.new(
+          id: way.id,
+          name: way.name,
+          node_ids: node_ids_by_way_id[way.id].to_a
+        )
+      end
+
+      Map.new(nodes:, ways:)
+    end
   end
 end

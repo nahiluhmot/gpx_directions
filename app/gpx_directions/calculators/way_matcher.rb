@@ -20,7 +20,7 @@ module GpxDirections
         @ways_by_node_id = ways_by_node_id
       end
 
-      def match_node_ways(nodes)
+      def match_nodes_to_ways(nodes)
         nodes.each_with_object([]) do |node, node_ways|
           ways = @ways_by_node_id[node.id]
           last_node_id = node_ways.last&.way&.id

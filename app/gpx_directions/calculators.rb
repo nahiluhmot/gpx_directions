@@ -41,22 +41,25 @@ module GpxDirections
 
     module_function
 
-    def calculate_directions(osm_map, gpx_route)
-      Logger.info("building 2D tree with #{osm_map.nodes.length} nodes")
-      node_tree = TwoDimensionalTree.build(osm_map.nodes)
+    # Builders
 
-      Logger.info("matching #{gpx_route.points.length} points to nodes")
-      slice_size = (gpx_route.points.length / Parallel.processor_count) + 1
-      matching_nodes = Parallel.flat_map(gpx_route.points.each_slice(slice_size)) do |slice|
-        slice.map { |point| node_tree.find_nearest_node(point.lat, point.lon) }
+    def build_2d_tree(nodes)
+      TwoDimensionalTree.build(nodes)
+    end
+
+    # Helpers
+
+    def calculate_bounds_around_points(points, padding_meters)
+      points.map do |point|
+        CoordinateMath.calculate_bounds_around_point(point, padding_meters)
       end
+    end
 
-      Logger.info("matching nodes to #{osm_map.ways.length} ways")
-      node_ways = WayMatcher
-        .build(osm_map.ways)
-        .match_node_ways(matching_nodes)
+    def match_nodes_to_ways(nodes, ways)
+      WayMatcher.build(ways).match_nodes_to_ways(nodes)
+    end
 
-      Logger.info("translating node ways to directions")
+    def calculate_directions(node_ways)
       DirectionsCalculator.calculate_directions(node_ways)
     end
   end
