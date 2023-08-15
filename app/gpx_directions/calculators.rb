@@ -1,5 +1,6 @@
 require "gpx_directions/calculators/coordinate_math"
 require "gpx_directions/calculators/directions_calculator"
+require "gpx_directions/calculators/median_partitioning"
 require "gpx_directions/calculators/sorting"
 require "gpx_directions/calculators/two_dimensional_tree"
 require "gpx_directions/calculators/way_matcher"
@@ -47,8 +48,19 @@ module GpxDirections
       end
     end
 
+    def calculate_bounds_with_padding(bounds, padding_meters)
+      CoordinateMath.calculate_bounds_with_padding(bounds, padding_meters)
+    end
+
+    def calculate_partition_bounds(gpx_points, max_area_km2)
+      MedianPartitioning.calculate_partition_bounds(gpx_points, max_area_km2)
+    end
+
     def calculate_osm_map_for_gpx_route(gpx_route, osm_map)
+      GpxDirections.logger.info("building 2D tree of #{osm_map.nodes.length} nodes")
       node_tree = TwoDimensionalTree.build(osm_map.nodes)
+
+      GpxDirections.logger.info("matching #{gpx_route.points.length} points to nodes")
       nodes = gpx_route.points.map do |gpx_point|
         node_tree.find_nearest_node(gpx_point.lat, gpx_point.lon)
       end

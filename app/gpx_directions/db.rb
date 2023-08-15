@@ -50,7 +50,16 @@ module GpxDirections
 
       ways = nodes
         .each_slice(BATCH_SIZE)
-        .flat_map(&method(:load_ways_for_nodes))
+        .each_with_object({}) do |slice, hash|
+          load_ways_for_nodes(slice).each do |way|
+            if hash.key?(way.id)
+              hash[way.id].node_ids += way.node_ids
+            else
+              hash[way.id] = way
+            end
+          end
+        end
+        .values
 
       Osm::Map.new(nodes:, ways:)
     end
@@ -171,7 +180,7 @@ module GpxDirections
 
       rows.map do |id_str, name, node_ids_str|
         id = id_str.to_s.to_sym
-        node_ids = node_ids_str.split(",").map(&:to_sym)
+        node_ids = Set.new(node_ids_str.split(",").map(&:to_sym))
 
         Osm::Way.new(id:, name:, node_ids:)
       end

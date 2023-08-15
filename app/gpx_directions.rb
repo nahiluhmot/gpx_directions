@@ -65,10 +65,13 @@ module GpxDirections
     osm_map
   end
 
-  def load_osm_map_from_db(db:, gpx_route:, padding_meters: 750)
-    logger.info("loading osm map from db")
+  def load_osm_map_from_db(db:, gpx_route:, partition_area_km2: BigDecimal("0.4"), padding_meters: 400)
+    logger.info("calculating partitions {points: #{gpx_route.points.length}, area_km2: #{partition_area_km2.to_digits}, padding_meters: #{padding_meters}}")
+    padded_bounds_ary = Calculators
+      .calculate_partition_bounds(gpx_route.points, partition_area_km2)
+      .map { |bounds| Calculators.calculate_bounds_with_padding(bounds, padding_meters) }
 
-    padded_bounds_ary = Calculators.calculate_bounds_around_points(gpx_route.points, padding_meters)
+    logger.info("loading osm map from db for #{padded_bounds_ary.length} partitions")
     osm_map = db.build_map_for_bounds(padded_bounds_ary)
 
     logger.info("selecting relevant nodes from osm map #{Serializers.show_map(osm_map)}")

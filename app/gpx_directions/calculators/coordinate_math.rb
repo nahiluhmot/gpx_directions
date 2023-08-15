@@ -25,17 +25,40 @@ module GpxDirections
         2 * EARTH_RADIUS_METERS * Math.asin(Math.sqrt(c))
       end
 
+      def calculate_area_km2(lat1, lon1, lat2, lon2)
+        length_meters = calculate_distance_meters(lat1, lon1, lat1, lon2)
+        height_meters = calculate_distance_meters(lat1, lon1, lat2, lon1)
+
+        (length_meters / 1000) *
+          (height_meters / 1000)
+      end
+
       # Calculate an approximate distance score (faster, no sqrt or trig).
       def calculate_distance_score(lat1, lon1, lat2, lon2)
         ((lat1 - lat2)**2) + ((lon1 - lon2)**2)
       end
 
+      def calculate_bounds_with_padding(bounds, padding_meters)
+        min_meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * Math.cos(bounds.min_lat * ONE_DEGREE_RADIANS)
+        max_meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * Math.cos(bounds.max_lat * ONE_DEGREE_RADIANS)
+
+        delta_lat = padding_meters * DEGREES_LATITUDE_PER_METER
+        delta_min_lon = padding_meters / min_meters_per_degree_longitude
+        delta_max_lon = padding_meters / max_meters_per_degree_longitude
+
+        Bounds.new(
+          min_lat: bounds.min_lat - delta_lat,
+          max_lat: bounds.max_lat + delta_lat,
+          min_lon: bounds.min_lon - delta_min_lon,
+          max_lon: bounds.max_lon + delta_max_lon
+        )
+      end
+
       def calculate_bounds_around_point(point, padding_meters)
         meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * Math.cos(point.lat * ONE_DEGREE_RADIANS)
 
-        delta_meters = padding_meters / 2
-        delta_lat = delta_meters * DEGREES_LATITUDE_PER_METER
-        delta_lon = delta_meters / meters_per_degree_longitude
+        delta_lat = padding_meters * DEGREES_LATITUDE_PER_METER
+        delta_lon = padding_meters / meters_per_degree_longitude
 
         Bounds.new(
           min_lat: point.lat - delta_lat,
