@@ -22,8 +22,10 @@ module GpxDirections
   module_function
 
   def generate_directions(db_filepath:, gpx_filepath:)
+    db = DB.build(db_filepath)
+
     gpx_route = load_gpx_route(gpx_filepath:)
-    osm_map = load_osm_map_from_db(db_filepath:, gpx_route:)
+    osm_map = load_osm_map_from_db(db:, gpx_route:)
     directions = calculate_directions(osm_map:)
 
     Serializers.show_directions(directions)
@@ -63,28 +65,15 @@ module GpxDirections
     osm_map
   end
 
-  # The loaded OSM Map only contains the GPX Route's nodes in order.
-  def load_osm_map_from_db(db_filepath:, gpx_route:, padding_meters: 1000)
-    logger.info("loading map from #{db_filepath}")
-    db = DB.build(db_filepath)
+  def load_osm_map_from_db(db:, gpx_route:, padding_meters: 750)
+    logger.info("loading osm map from db")
 
-    slice_size = ((gpx_route.points.length - 1) / (Parallel.processor_count * 4)) + 1
-    osm_maps = Parallel.map(gpx_route.points.each_slice(slice_size)) do |points|
-      padded_bounds_ary = Calculators.calculate_bounds_around_points(points, padding_meters)
-      osm_map = db.build_map_for_bounds(padded_bounds_ary)
+    padded_bounds_ary = Calculators.calculate_bounds_around_points(gpx_route.points, padding_meters)
+    osm_map = db.build_map_for_bounds(padded_bounds_ary)
 
-      node_tree = Calculators.build_2d_tree(osm_map.nodes)
-      osm_map.nodes = points.map do |point|
-        node_tree.find_nearest_node(point.lat, point.lon)
-      end
-
-      osm_map
-    end
-
-    logger.info("merging #{osm_maps.length} maps")
-    osm_map = Osm.merge_maps(osm_maps)
-
-    logger.info("loaded osm map #{Serializers.show_map(osm_map)}")
+    logger.info("selecting relevant nodes from osm map #{Serializers.show_map(osm_map)}")
+    osm_map = Calculators.calculate_osm_map_for_gpx_route(gpx_route, osm_map)
+    logger.info("filtered map down to #{Serializers.show_map(osm_map)}")
 
     osm_map
   end

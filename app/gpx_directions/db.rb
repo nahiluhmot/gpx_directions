@@ -42,8 +42,15 @@ module GpxDirections
     end
 
     def build_map_for_bounds(bounds_ary)
-      nodes = bounds_ary.each_slice(BATCH_SIZE).flat_map(&method(:load_nodes_in_bounds))
-      ways = nodes.each_slice(BATCH_SIZE).flat_map(&method(:load_ways_for_nodes))
+      nodes = bounds_ary
+        .each_slice(BATCH_SIZE)
+        .flat_map(&method(:load_nodes_in_bounds))
+
+      nodes.uniq!(&:id)
+
+      ways = nodes
+        .each_slice(BATCH_SIZE)
+        .flat_map(&method(:load_ways_for_nodes))
 
       Osm::Map.new(nodes:, ways:)
     end

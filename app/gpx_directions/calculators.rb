@@ -41,22 +41,23 @@ module GpxDirections
 
     module_function
 
-    # Builders
-
-    def build_2d_tree(nodes)
-      TwoDimensionalTree.build(nodes)
-    end
-
-    # Helpers
-
-    def calculate_bounds_around_points(points, padding_meters)
-      points.map do |point|
-        CoordinateMath.calculate_bounds_around_point(point, padding_meters)
+    def calculate_bounds_around_points(gpx_points, padding_meters)
+      gpx_points.map do |gpx_point|
+        CoordinateMath.calculate_bounds_around_point(gpx_point, padding_meters)
       end
     end
 
-    def match_nodes_to_ways(nodes, ways)
-      WayMatcher.build(ways).match_nodes_to_ways(nodes)
+    def calculate_osm_map_for_gpx_route(gpx_route, osm_map)
+      node_tree = TwoDimensionalTree.build(osm_map.nodes)
+      nodes = gpx_route.points.map do |gpx_point|
+        node_tree.find_nearest_node(gpx_point.lat, gpx_point.lon)
+      end
+
+      Osm::Map.new(nodes:, ways: osm_map.ways)
+    end
+
+    def match_nodes_to_ways(osm_nodes, osm_ways)
+      WayMatcher.build(osm_ways).match_nodes_to_ways(osm_nodes)
     end
 
     def calculate_directions(node_ways)
