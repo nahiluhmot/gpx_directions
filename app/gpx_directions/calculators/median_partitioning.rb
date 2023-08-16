@@ -24,7 +24,11 @@ module GpxDirections
           end
 
           comparator = consider_lat ? :lat : :lon
-          pivot_idx = Sorting.quick_select!(points, start_idx, end_idx, (start_idx + end_idx) / 2, &comparator)
+          len = (end_idx - start_idx) + 1
+          mean = (start_idx..end_idx)
+            .sum { |idx| points[idx].public_send(comparator) }
+            .then { |sum| sum / len }
+          pivot_idx = Sorting.partition_by_value!(points, start_idx, end_idx, mean, &comparator)
 
           to_partition << [start_idx, pivot_idx, !consider_lat]
           to_partition << [pivot_idx + 1, end_idx, !consider_lat]

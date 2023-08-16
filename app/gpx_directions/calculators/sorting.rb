@@ -46,6 +46,24 @@ module GpxDirections
 
         j
       end
+
+      def partition_by_value!(ary, start_idx, end_idx, pivot)
+        i = start_idx
+        j = end_idx
+
+        loop do
+          i += 1 while (i <= end_idx) && (yield(ary[i]) <= pivot)
+          j -= 1 while (j >= start_idx) && (yield(ary[j]) > pivot)
+
+          if i < j
+            ary[i], ary[j] = ary[j], ary[i]
+          else
+            break
+          end
+        end
+
+        j.clamp(start_idx, end_idx)
+      end
     end
   end
 end
